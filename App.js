@@ -1,43 +1,59 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, Alert, Platform, Pressable } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
 
 const App = () => {
-  const [user, setUser] = useState(null);  // Initially, user is null
-  const [greeting, setGreeting] = useState('');
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleGreet = () => {
+  // Function to fetch data from API
+  // const fetchData = async () => {
+  //     const response = await fetch('https://jsonplaceholder.typicode.com/users'); // API URL
+  //     const json = await response.json(); // Parsing the JSON response
+  //     setData(json); // Set data in state
+  // };
+
+  //https://jsonplaceholder.typicode.com/users
+  const fetchData = async () => {
     try {
-      // Trying to access user.name when user is null or undefined will throw a TypeError
-      setGreeting(`Hello, ${user.name}!`);
-    } catch (error) {
-      if (error instanceof TypeError) {
-        console.error('TypeError:', error.message);  // Log the error to the console
-        if (Platform.OS === 'web') {
-            // Use alert for web
-            alert('WEB - User is not defined or user.name is not accessible');
-          } else {
-            // Use React Native Alert for mobile
-            Alert.alert(
-              'Error', 'User is not defined or user.name is not accessible',
-            );
-          }
+      const response = await fetch('https://jsonplaceholder.typicode.com/users'); // API URL
+
+if(response.status == 404) {
+        throw Error("Data not found");
+      } else {
+      const json = await response.json(); // Parsing the JSON response
+      setData(json); // Set data in state
       }
-      setGreeting('Hello!'); // Set Greeting to Hello if error occurs
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      setData([{ name: 'No data found' }]); // Set 'No data found' in case of an exception
+    } finally {
+      setLoading(false); // Stop loading when data is fetched
     }
   };
 
+  // useEffect to fetch data when component mounts
+  useEffect(() => {
+    fetchData();
+  }, []);
+
   return (
     <View style={styles.container}>
-      <Text style={styles.heading}>Enter Your Name:</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Your Name"
-        onChangeText={text => setUser({ name: text })}  // Setting the user object
-      />
-      <Pressable style={styles.pressable} onPress={handleGreet}>
-        <Text style={styles.pressableText}>Greet Me</Text>
-      </Pressable>
-      {greeting !== '' && <Text style={styles.greeting}>{greeting}</Text>}
+      <Text style={styles.heading}>Users List</Text>
+
+      {loading ? (
+        <ActivityIndicator size="large" color="#0000ff" />
+      ) : (
+        <FlatList
+          data={data}
+          keyExtractor={(item, index) => index.toString()}
+          renderItem={({ item }) => (
+            <View style={styles.item}>
+              <Text style={styles.name}>{item.name}</Text>
+              {item.email && <Text style={styles.email}>{item.email}</Text>}
+            </View>
+          )}
+        />
+      )}
     </View>
   );
 };
@@ -46,35 +62,27 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
+    paddingTop: 50,
+    paddingHorizontal: 20,
   },
   heading: {
-    fontSize: 20,
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
     marginBottom: 20,
   },
-  input: {
-    height: 40,
-    borderColor: 'gray',
-    borderWidth: 1,
-    paddingHorizontal: 10,
-    marginBottom: 20,
-    width: '80%',
-  },
-  pressable: {
-    backgroundColor: 'blue',
+  item: {
     padding: 10,
-    borderRadius: 5,
-    marginTop: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
   },
-  pressableText: {
-    color: 'white',
-    fontSize: 16,
-  },
-  greeting: {
-    marginTop: 20,
+  name: {
     fontSize: 18,
-    color: 'green',
+    fontWeight: 'bold',
+  },
+  email: {
+    fontSize: 14,
+    color: 'gray',
   },
 });
 
