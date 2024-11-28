@@ -1,11 +1,15 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, Button, StyleSheet } from 'react-native';
 
 const App = () => {
+  const handlePress = () => {
+    alert('Button Pressed!');
+  };
 
   return (
     <View style={styles.container}>
       <Text style={styles.text}>Welcome to React Error handling</Text>
+      <Button title="Click me" onPress={handlePress} />
     </View>
   );
 };
